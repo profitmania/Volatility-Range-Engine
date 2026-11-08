@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LMC Volatility Range Engine (LMC VRE v1.6.1) | Live Market Coach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #040D1A;
+      --bg-card: #081D2D;
+      --bg-navy: #061625;
+      --border-cyan: rgba(0, 217, 245, 0.3);
+      --border-dim: rgba(255, 255, 255, 0.08);
+      --c-cyan: #00D9F5;
+      --c-green: #00E7A4;
+      --c-gold: #FFD000;
+      --c-orange: #FFAA00;
+      --c-red: #FF4161;
+      --c-silver: #B2B5BE;
+      --c-white: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--c-silver);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      line-height: 1.5;
+      padding: 24px 16px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* TOP HEADER HUD */
+    .header-hud {
+      background: var(--bg-navy);
+      border: 1px solid var(--border-cyan);
+      border-radius: 12px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0, 217, 245, 0.05);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #00D9F5 0%, #00E7A4 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--bg-dark);
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--c-white);
+      letter-spacing: 0.5px;
+    }
+
+    .brand-version {
+      background: rgba(0, 217, 245, 0.15);
+      color: var(--c-cyan);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--c-cyan);
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--c-silver);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(8, 29, 45, 0.9);
+      border: 1px solid var(--border-dim);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--c-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--c-green);
+    }
+
+    .btn-pine {
+      background: linear-gradient(135deg, #00D9F5 0%, #0088F5 100%);
+      color: #040D1A;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-pine:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 217, 245, 0.3);
+    }
+
+    /* GRID LAYOUT */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--c-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* VALUE PROPOSITION BOXES */
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .value-card {
+      background: rgba(6, 22, 37, 0.7);
+      border: 1px solid var(--border-dim);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .value-card h4 {
+      color: var(--c-gold);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .value-card p {
+      font-size: 12px;
+      color: var(--c-silver);
+      line-height: 1.4;
+    }
+
+    /* SIMULATOR & INTERACTIVE HUD PREVIEW */
+    .sim-wrapper {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .sim-wrapper { grid-template-columns: 1fr; }
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--bg-navy);
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-dim);
+    }
+
+    .control-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--c-silver);
+      text-transform: uppercase;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-option {
+      background: #040D1A;
+      color: var(--c-silver);
+      border: 1px solid var(--border-dim);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .btn-option.active {
+      background: rgba(0, 217, 245, 0.15);
+      border-color: var(--c-cyan);
+      color: var(--c-white);
+    }
+
+    /* SIMULATED TRADINGVIEW HUD DISPLAY */
+    .tv-hud-display {
+      background: #020914;
+      border: 1px solid var(--border-cyan);
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .sim-top-coach {
+      background: var(--bg-navy);
+      border: 1px solid var(--c-cyan);
+      border-radius: 6px;
+      padding: 8px 12px;
+      text-align: center;
+    }
+
+    .sim-coach-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--c-cyan);
+      background: #073047;
+      padding: 3px;
+      border-radius: 3px;
+    }
+
+    .sim-coach-msg {
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 4px;
+      padding: 4px;
+      border-radius: 3px;
+    }
+
+    .sim-chart-area {
+      position: relative;
+      height: 220px;
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 140px;
+    }
+
+    .sim-candle {
+      width: 14px;
+      position: absolute;
+      right: 160px;
+      border-radius: 2px;
+    }
+
+    .sim-label-tag {
+      position: absolute;
+      right: 20px;
+      background: #081D2D;
+      border: 1px dashed var(--c-gold);
+      color: var(--c-gold);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* RIGHT SIDE STATS PANEL PREVIEW */
+    .sim-right-table {
+      background: var(--bg-navy);
+      border: 1px solid var(--c-cyan);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    .sim-table-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.05);
+    }
+
+    /* PINE SCRIPT MODAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(4, 13, 26, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--c-cyan);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      background: var(--bg-navy);
+      border-bottom: 1px solid var(--border-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      font-size: 16px;
+      color: var(--c-white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      background: rgba(0, 217, 245, 0.1);
+      color: var(--c-cyan);
+      border: 1px solid var(--c-cyan);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-action:hover { background: var(--c-cyan); color: #040D1A; }
+
+    .modal-body {
+      padding: 16px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .code-editor {
+      width: 100%;
+      height: 420px;
+      background: #020914;
+      color: #00E7A4;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 14px;
+      border: 1px solid var(--border-dim);
+      border-radius: 6px;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+    }
+
+    .modal-footer {
+      padding: 12px 20px;
+      background: var(--bg-navy);
+      border-top: 1px solid var(--border-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--c-silver);
+    }
+
+    /* INSTRUCTIONS */
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: rgba(6, 22, 37, 0.5);
+      padding: 10px 14px;
+      border-radius: 8px;
+    }
+
+    .step-num {
+      background: var(--c-cyan);
+      color: var(--bg-dark);
+      font-weight: 800;
+      font-size: 12px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER HUD -->
+  <header class="header-hud">
+    <div class="brand-section">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h1 class="brand-title">LIVE MARKET COACH</h1>
+          <span class="brand-version">v1.6.1 ACTIVE</span>
+        </div>
+        <p class="brand-subtitle">LMC Volatility Range Engine (VRE) — Empirical Futures Harvesting Suite</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        <span>STATE: HARVESTING ACTIVE</span>
+      </div>
+      <button class="btn-pine" onclick="openModal()">
+        <span>&lt;/&gt;</span> Pine Script Code
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN DASHBOARD CONTENT -->
+  <div class="dashboard-grid">
+    
+    <!-- LEFT COLUMN: SYSTEM ARCHITECTURE & SIMULATOR -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- VALUE PROPOSITION CARD -->
+      <div class="card">
+        <h2 class="card-title">💡 Why LMC VRE Works (Empirical Edge)</h2>
+        <div class="value-grid">
+          <div class="value-card">
+            <h4>🚫 Eliminates Retail Guesswork</h4>
+            <p>Retail traders lose by buying breakouts at candle peaks (+35 pts) or catching falling knives. VRE buys mathematically at the statistical exhaustion point of the candle.</p>
+          </div>
+          <div class="value-card">
+            <h4>📊 Max Bar Range Step (No ATR Lag)</h4>
+            <p>Scans the last 30 bars for the absolute longest candle range (e.g. 39.1 pts). Uses this exact range as the fixed step for Lot 1, Lot 2 (AVG 1), and Lot 3 (AVG 2).</p>
+          </div>
+          <div class="value-card">
+            <h4>⚡ Dual Point Counter (-/+ XX.X pts)</h4>
+            <p>Real-time depth counter on active candles showing exact drop on Red bars and gain on Green bars with instant 🎯 Take Profit & ⚡ Max Range alerts.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE MARKET SCENARIO SIMULATOR -->
+      <div class="card">
+        <h2 class="card-title">🎮 Market Scenario Simulator & TradingView HUD Preview</h2>
+        
+        <div class="sim-wrapper">
+          <!-- CONTROLS -->
+          <div class="control-group">
+            <span class="control-label">1. Active Candle State</span>
+            <div class="btn-group">
+              <button class="btn-option active" onclick="setSimState('red_normal')">🔴 Red Pullback Bar (-11.1 pts)</button>
+              <button class="btn-option" onclick="setSimState('red_max')">⚡ Max Red Exhaustion (-36.1 pts)</button>
+              <button class="btn-option" onclick="setSimState('green_normal')">🟢 Green Bounce (+15.4 pts)</button>
+              <button class="btn-option" onclick="setSimState('green_max')">🎯 Max Green TP (+36.1 pts)</button>
+            </div>
+
+            <span class="control-label" style="margin-top: 10px;">2. HTF Structure Context</span>
+            <div class="btn-group">
+              <button class="btn-option active" id="btn-bull" onclick="setTrend(1)">15M Bullish Intact</button>
+              <button class="btn-option" id="btn-broken" onclick="setTrend(-1)">HTF Structural Break</button>
+            </div>
+          </div>
+
+          <!-- SIMULATED TRADINGVIEW DISPLAY -->
+          <div class="tv-hud-display">
+            <!-- TOP AI COACH -->
+            <div class="sim-top-coach">
+              <div class="sim-coach-title">LMC VRE v1.6.1 | VOLATILITY RANGE ENGINE | 15M BULLISH</div>
+              <div class="sim-coach-msg" id="sim-coach-status" style="background: #2B2600; color: #FFD000;">
+                PULLBACK ACTIVE: Buy Lot 1 on Red Candle Low
+              </div>
+            </div>
+
+            <!-- CHART CANDLE AREA -->
+            <div class="sim-chart-area">
+              <div class="sim-candle" id="sim-candle-body" style="height: 60px; background: #FF4161; top: 60px;"></div>
+              <div class="sim-label-tag" id="sim-grid-tag" style="top: 80px;">
+                LOT 1 BUY | 27130.25
+              </div>
+              <div class="sim-label-tag" id="sim-depth-tag" style="top: 120px; background: #081D2D; border-color: #FFD000; color: #FFD000;">
+                -11.1 pts
+              </div>
+            </div>
+
+            <div style="font-size: 10px; color: var(--c-silver); text-align: center;">
+              * Interactive visualization simulating real-time Pine Script HUD rendering on TradingView.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: SWING LEG ANALYTICS & QUICK START -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- SWING LEG ANALYTICS TABLE -->
+      <div class="card">
+        <h2 class="card-title">📈 Swing Leg Analytics (60b Scan)</h2>
+        <div class="sim-right-table">
+          <div class="sim-table-row" style="background: #073047; padding: 6px; font-weight: 700; color: var(--c-white);">
+            <span>METRIC</span>
+            <span style="color: var(--c-cyan);">CURRENT SWING</span>
+          </div>
+          <div class="sim-table-row">
+            <span style="color: var(--c-silver);">Total Leg Depth</span>
+            <span style="color: var(--c-red); font-weight: 700;" id="st-depth">-156.1 pts</span>
+          </div>
+          <div class="sim-table-row">
+            <span style="color: var(--c-gold);">Max Red Bar (Leg)</span>
+            <span style="color: var(--c-gold); font-weight: 700;" id="st-max-red">-31.1 pts</span>
+          </div>
+          <div class="sim-table-row">
+            <span style="color: var(--c-green);">Max Green Bar (Leg)</span>
+            <span style="color: var(--c-green); font-weight: 700;" id="st-max-green">+25.1 pts</span>
+          </div>
+          <div class="sim-table-row">
+            <span style="color: var(--c-silver);">Avg Red Bar</span>
+            <span style="color: var(--c-orange);" id="st-avg-red">-14.1 pts</span>
+          </div>
+          <div class="sim-table-row">
+            <span style="color: var(--c-silver);">Avg Green Bar</span>
+            <span style="color: var(--c-green);" id="st-avg-green">+13.1 pts</span>
+          </div>
+          <div class="sim-table-row">
+            <span style="color: var(--c-silver);">Bear Candle Ratio</span>
+            <span style="color: var(--c-gold); font-weight: 700;" id="st-ratio">29/55 (53.1%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK START STEPS -->
+      <div class="card">
+        <h2 class="card-title">🚀 How to Install on TradingView</h2>
+        <div class="steps-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div>
+              <strong style="color: var(--c-white); font-size: 12px;">Copy Script</strong>
+              <p style="font-size: 11px;">Click <strong>&lt;/&gt; Pine Script Code</strong> button at the top to view and copy v1.6.1 source code.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div>
+              <strong style="color: var(--c-white); font-size: 12px;">Open Pine Editor</strong>
+              <p style="font-size: 11px;">Open TradingView, select <strong>MNQ1! / NQ1! (1m timeframe)</strong>, open Pine Editor at the bottom.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div>
+              <strong style="color: var(--c-white); font-size: 12px;">Add to Chart</strong>
+              <p style="font-size: 11px;">Paste code, click <strong>Save</strong> and <strong>Add to Chart</strong>. Grid & HUD will render instantly.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- PINE SCRIPT CODE EDITOR MODAL -->
+<div class="modal-overlay" id="codeModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><span>&lt;/&gt;</span> Pine Script Code Editor <span class="brand-version" id="save-status">Saved in Browser</span></h3>
+      <div class="modal-actions">
+        <button class="btn-action" onclick="copyCode()">📋 Copy</button>
+        <button class="btn-action" onclick="saveCode()">💾 Save</button>
+        <button class="btn-action" onclick="resetCode()">🔄 Reset</button>
+        <button class="btn-action" style="background: rgba(255, 65, 97, 0.2); border-color: var(--c-red); color: var(--c-red);" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <textarea class="code-editor" id="pineCodeTextarea" spellcheck="false"></textarea>
+    </div>
+    <div class="modal-footer">
+      <span>Read/Write mode: You can directly modify code and save it to browser localStorage without rebuilding site.</span>
+      <button class="btn-pine" style="padding: 6px 14px; font-size: 12px;" onclick="closeModal()">Close Window</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // DEFAULT PINE SCRIPT V1.6.1 SOURCE CODE
+  const DEFAULT_PINE_CODE = `//@version=6
+indicator("LMC Volatility Range Engine v1.6.1", "LMC VRE", overlay=true, max_lines_count=300, max_labels_count=300, max_boxes_count=30)
+
+// =============================================================================
+// HISTORICAL BUFFER ALLOCATION (Fixes Error: Historical buffer limit 55)
+// =============================================================================
+max_bars_back(open, 300)
+max_bars_back(high, 300)
+max_bars_back(low, 300)
+max_bars_back(close, 300)
+
+// =============================================================================
+// DESIGN & COLOR PALETTE
+// =============================================================================
+const string TZ = "America/New_York"
+const color C_CYAN      = #00D9F5
+const color C_GREEN     = #00E7A4
+const color C_GOLD      = #FFD000
+const color C_ORANGE    = #FFAA00
+const color C_RED       = #FF4161
+const color C_NAVY      = #061625
+const color C_DARK      = #081D2D
+const color C_WHITE     = #FFFFFF
+const color C_SILVER    = #B2B5BE
+
+// =============================================================================
+// INPUT PARAMETERS
+// =============================================================================
+grp_core   = "01 | Structure & HTF Trend Settings"
+emaFastLen = input.int(20, "15m HTF EMA Fast", minval=2, group=grp_core)
+emaSlowLen = input.int(50, "15m HTF EMA Slow", minval=3, group=grp_core)
+quickTpPts = input.float(15.0, "Quick Exit Profit Target (+Pts)", minval=5.0, step=1.0, group=grp_core)
+
+grp_vol    = "02 | Pure Max Bar Range Sizing"
+lookbackBars = input.int(30, "Lookback History Bars for Grid Step", minval=10, maxval=100, group=grp_vol)
+swingLookback= input.int(60, "Current Swing Leg Scan Window (Bars)", minval=15, maxval=200, group=grp_vol)
+
+grp_exec   = "03 | Visual & Layout Controls"
+showSsl        = input.bool(true, "Show Background Sell-Side Liquidity Pool", group=grp_exec)
+showSig        = input.bool(true, "Show Buy Arrow on Current Active Red Bar Only", group=grp_exec)
+showBarDepth   = input.bool(true, "Show Dual Points Counter Tag (+/-XX.X pts)", group=grp_exec)
+showGrid       = input.bool(true, "Show Active Grid & Target Lines", group=grp_exec)
+showCoach      = input.bool(true, "Show Top Dynamic AI Coach Banner", group=grp_exec)
+showSwingStats = input.bool(true, "Show Right Swing Leg Statistics Box", group=grp_exec)
+projBars       = input.int(10, "Line Offset / Projection Length (Bars)", minval=3, maxval=40, group=grp_exec)
+
+// =============================================================================
+// CME SESSION & HTF DIRECTION
+// =============================================================================
+nyHour = hour(time, TZ)
+isNewCmeDay = (nyHour == 18 and (na(nyHour[1]) or nyHour[1] != 18)) or barstate.isfirst
+
+htfFast  = request.security(syminfo.tickerid, "15", ta.ema(close, emaFastLen)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+htfSlow  = request.security(syminfo.tickerid, "15", ta.ema(close, emaSlowLen)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+htfClose = request.security(syminfo.tickerid, "15", close[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+
+trendBias = na(htfFast) or na(htfSlow) ? 0 : (htfClose > htfFast and htfFast > htfSlow) ? 1 : (htfClose < htfFast and htfFast < htfSlow) ? -1 : 0
+
+// Pure empirical max bar range lookup (History 30 bars)
+maxBarRange = ta.highest(high - low, lookbackBars)
+
+// =============================================================================
+// ROBUST HTF STRUCTURE & MINIMUM TRACKER
+// =============================================================================
+float htfLowPivot = request.security(syminfo.tickerid, "15", ta.pivotlow(low, 3, 3)[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+var float protectedLow = na
+
+if isNewCmeDay
+    protectedLow := na
+
+if not na(htfLowPivot)
+    protectedLow := htfLowPivot
+
+protectedLow := na(protectedLow) ? ta.lowest(low, 40) : protectedLow
+
+bool activeBullContext = trendBias == 1 or (not na(protectedLow) and close >= protectedLow - 15.0)
+bool structureBroken  = not na(protectedLow) and close < protectedLow - 25.0
+
+// =============================================================================
+// REAL-TIME SWING LEG DYNAMIC STATISTICAL ENGINE
+// =============================================================================
+int highestOffset = math.abs(ta.highestbars(high, swingLookback))
+
+var float swingMaxRed    = 0.0
+var float swingMaxGreen  = 0.0
+var float swingSumRed    = 0.0
+var float swingSumGreen  = 0.0
+var int   swingRedCount  = 0
+var int   swingGreenCount= 0
+var float swingPeakPrice = na
+var float swingLowPrice  = na
+
+if barstate.islast
+    swingMaxRed     := 0.0
+    swingMaxGreen   := 0.0
+    swingSumRed     := 0.0
+    swingSumGreen   := 0.0
+    swingRedCount   := 0
+    swingGreenCount := 0
+    swingPeakPrice  := high[highestOffset]
+    swingLowPrice   := low
+
+    // Loop through all bars from the Swing Peak to current active bar
+    for i = highestOffset to 0
+        o = open[i]
+        c = close[i]
+        h = high[i]
+        l = low[i]
+
+        if l < swingLowPrice
+            swingLowPrice := l
+
+        if c < o // Red Bar
+            drop = o - l
+            swingMaxRed := math.max(swingMaxRed, drop)
+            swingSumRed += drop
+            swingRedCount += 1
+        else if c > o // Green Bar
+            gain = h - o
+            swingMaxGreen := math.max(swingMaxGreen, gain)
+            swingSumGreen += gain
+            swingGreenCount += 1
+
+float swingAvgRed   = swingRedCount > 0 ? (swingSumRed / swingRedCount) : 0.0
+float swingAvgGreen = swingGreenCount > 0 ? (swingSumGreen / swingGreenCount) : 0.0
+float swingTotalDepth = not na(swingPeakPrice) and not na(swingLowPrice) ? (swingPeakPrice - swingLowPrice) : 0.0
+int   totalSwingBars  = swingRedCount + swingGreenCount
+float bearRatio = totalSwingBars > 0 ? (swingRedCount * 100.0 / totalSwingBars) : 0.0
+
+// =============================================================================
+// ACTIVE BAR MATH & GRID CALCULATIONS
+// =============================================================================
+bool isRedCandle   = close < open
+bool isGreenCandle = close > open
+
+float redBarDrop   = isRedCandle ? (open - low) : 0.0
+float greenBarGain = isGreenCandle ? (high - open) : 0.0
+
+bool isRedExhausted   = isRedCandle and (redBarDrop >= maxBarRange)
+bool isGreenExhausted = isGreenCandle and (greenBarGain >= maxBarRange)
+
+var float redBarLot1Price = na
+if activeBullContext and isRedCandle
+    redBarLot1Price := low
+
+float lot1Price = activeBullContext ? nz(redBarLot1Price, low) : na
+
+float stepPts   = maxBarRange
+float lot2Price = not na(lot1Price) ? lot1Price - stepPts : na
+float lot3Price = not na(lot2Price) ? lot2Price - stepPts : na
+
+float singleLotTp       = not na(lot1Price) ? lot1Price + quickTpPts : na
+float avgBreakevenPrice = not na(lot1Price) and not na(lot2Price) and not na(lot3Price) ? (lot1Price + lot2Price + lot3Price) / 3.0 : na
+float quickExitTarget   = not na(avgBreakevenPrice) ? avgBreakevenPrice + quickTpPts : na
+
+float distToMinPts = not na(protectedLow) ? (close - protectedLow) : na
+
+// Dynamic Color State Logic for AI Coach Banner
+color coachBgColor = C_NAVY
+color statusTextColor = C_GREEN
+string statusMessage = "BULLISH STEADY — Awaiting Red Bar Pullback"
+
+if structureBroken
+    coachBgColor := #4A000B
+    statusTextColor := C_RED
+    statusMessage := "CRITICAL: HTF Protected Low Broken! Trading Suspended"
+else if isRedExhausted
+    coachBgColor := #003B2B
+    statusTextColor := C_CYAN
+    statusMessage := "⚡ MAX RED BAR REACHED (-" + str.tostring(redBarDrop, "#.1") + " pts) — EXHAUSTION BUY ZONE"
+else if isGreenExhausted
+    coachBgColor := #073047
+    statusTextColor := C_CYAN
+    statusMessage := "🎯 MAX GREEN BAR REACHED (+" + str.tostring(greenBarGain, "#.1") + " pts) — TAKE PROFIT / EXIT ZONE"
+else if not na(distToMinPts) and distToMinPts <= maxBarRange * 1.2
+    coachBgColor := #3B1700
+    statusTextColor := C_RED
+    statusMessage := "WARNING: Price Near Local Minimum! High Risk Zone"
+else if isRedCandle or (not na(lot1Price) and close <= lot1Price)
+    coachBgColor := #2B2600
+    statusTextColor := C_GOLD
+    statusMessage := "PULLBACK ACTIVE: Buy Lot 1 on Red Candle Low"
+else
+    coachBgColor := C_NAVY
+    statusTextColor := C_GREEN
+    statusMessage := "BULLISH STEADY: Structure Intact"
+
+// =============================================================================
+// DYNAMIC OVERLAY DRAWINGS & LIVE SIGNAL
+// =============================================================================
+var box   sslBox     = na
+var label activeBarSignalLabel = na
+var label activeBarPtsLabel    = na
+var array<line>  gridLines  = array.new_line()
+var array<label> gridLabels = array.new_label()
+
+if barstate.islast
+    if not na(sslBox)
+        box.delete(sslBox)
+    if not na(activeBarSignalLabel)
+        label.delete(activeBarSignalLabel)
+    if not na(activeBarPtsLabel)
+        label.delete(activeBarPtsLabel)
+    for ln in gridLines
+        line.delete(ln)
+    array.clear(gridLines)
+    for lb in gridLabels
+        label.delete(lb)
+    array.clear(gridLabels)
+
+    xStart = bar_index + 1
+    xEnd   = bar_index + projBars
+
+    // 1. Live Buy Arrow & Dual Points Counter Tag
+    if activeBullContext
+        if isRedCandle
+            if showSig
+                activeBarSignalLabel := label.new(bar_index, low - 3.0, "BUY RED DIP", style=label.style_label_up, color=C_GREEN, textcolor=C_WHITE, size=size.small)
+            
+            if showBarDepth
+                ptsText = "-" + str.tostring(redBarDrop, "#.1") + " pts" + (isRedExhausted ? " ⚡ MAX" : "")
+                ptsColor = isRedExhausted ? C_CYAN : C_GOLD
+                ptsBg    = isRedExhausted ? #073047 : C_DARK
+                activeBarPtsLabel := label.new(bar_index, (open + low) / 2.0, ptsText, style=label.style_label_left, color=ptsBg, textcolor=ptsColor, size=size.normal)
+
+        else if isGreenCandle and showBarDepth
+            ptsText = "+" + str.tostring(greenBarGain, "#.1") + " pts" + (isGreenExhausted ? " 🎯 TP" : "")
+            ptsColor = isGreenExhausted ? C_CYAN : C_GREEN
+            ptsBg    = isGreenExhausted ? #073047 : C_DARK
+            activeBarPtsLabel := label.new(bar_index, (open + high) / 2.0, ptsText, style=label.style_label_left, color=ptsBg, textcolor=ptsColor, size=size.normal)
+
+    // 2. Background SSL Support Pool
+    if showSsl and not na(protectedLow)
+        sslTop = protectedLow + 4.0
+        sslBot = protectedLow - 8.0
+        sslBox := box.new(bar_index - 25, sslTop, xEnd, sslBot, bgcolor=color.new(C_GOLD, 92), border_color=color.new(C_GOLD, 60), border_width=1, text="BACKGROUND SUPPORT / HTF SSL POOL", text_color=color.new(C_GOLD, 40), text_size=size.tiny)
+
+    // 3. Dynamic Grid Execution Overlay
+    if showGrid and activeBullContext and not na(lot1Price) and not na(lot2Price) and not na(lot3Price)
+        // Lot 1 Line
+        array.push(gridLines, line.new(xStart, lot1Price, xEnd, lot1Price, color=C_GOLD, width=2, style=line.style_dashed))
+        array.push(gridLabels, label.new(xEnd, lot1Price, "LOT 1 BUY | " + str.tostring(lot1Price, format.mintick), style=label.style_label_left, color=C_DARK, textcolor=C_GOLD, size=size.small))
+
+        // 1-Lot Exit Target
+        array.push(gridLines, line.new(xStart, singleLotTp, xEnd, singleLotTp, color=C_GREEN, width=1, style=line.style_dashed))
+        array.push(gridLabels, label.new(xEnd, singleLotTp, "1-LOT EXIT (+ " + str.tostring(quickTpPts, "#.0") + " pts) | " + str.tostring(singleLotTp, format.mintick), style=label.style_label_left, color=C_DARK, textcolor=C_GREEN, size=size.tiny))
+
+        // Lot 2 Line (AVG 1)
+        array.push(gridLines, line.new(xStart, lot2Price, xEnd, lot2Price, color=C_ORANGE, width=2, style=line.style_dashed))
+        array.push(gridLabels, label.new(xEnd, lot2Price, "LOT 2 AVG 1 (Step: " + str.tostring(stepPts, "#.1") + " pts) | " + str.tostring(lot2Price, format.mintick), style=label.style_label_left, color=C_DARK, textcolor=C_ORANGE, size=size.small))
+
+        // Lot 3 Line (AVG 2)
+        array.push(gridLines, line.new(xStart, lot3Price, xEnd, lot3Price, color=#FF5500, width=2, style=line.style_dashed))
+        array.push(gridLabels, label.new(xEnd, lot3Price, "LOT 3 AVG 2 (Step: " + str.tostring(stepPts, "#.1") + " pts) | " + str.tostring(lot3Price, format.mintick), style=label.style_label_left, color=C_DARK, textcolor=#FF5500, size=size.small))
+
+        // Combined Breakeven Line
+        array.push(gridLines, line.new(xStart, avgBreakevenPrice, xEnd, avgBreakevenPrice, color=C_CYAN, width=1, style=line.style_dotted))
+        array.push(gridLabels, label.new(xEnd, avgBreakevenPrice, "BREAKEVEN | " + str.tostring(avgBreakevenPrice, format.mintick), style=label.style_label_left, color=C_DARK, textcolor=C_CYAN, size=size.tiny))
+
+        // Quick Exit Target (+15 pts)
+        array.push(gridLines, line.new(xStart, quickExitTarget, xEnd, quickExitTarget, color=C_GREEN, width=2))
+        array.push(gridLabels, label.new(xEnd, quickExitTarget, "QUICK EXIT (+ " + str.tostring(quickTpPts, "#.0") + " pts) | " + str.tostring(quickExitTarget, format.mintick), style=label.style_label_left, color=C_GREEN, textcolor=C_WHITE, size=size.small))
+
+        // Protected Structural Stop
+        if not na(protectedLow)
+            array.push(gridLines, line.new(xStart, protectedLow, xEnd, protectedLow, color=C_RED, width=2))
+            array.push(gridLabels, label.new(xEnd, protectedLow, "HTF PROTECTED LOW | " + str.tostring(protectedLow, format.mintick), style=label.style_label_left, color=C_RED, textcolor=C_WHITE, size=size.small))
+
+// =============================================================================
+// UI DASHBOARD PANELS & RIGHT STATISTICAL BOX
+// =============================================================================
+fNum(val) => na(val) ? "N/A" : str.tostring(val, "#.1")
+fPrice(val) => na(val) ? "N/A" : str.tostring(val, format.mintick)
+
+// 1. Top AI Coach Header (2 Clean Rows)
+string topRow0 = "LMC VRE v1.6.1  |  VOLATILITY RANGE ENGINE  |  15M " + (trendBias == 1 ? "BULLISH" : trendBias == -1 ? "BEARISH" : "NEUTRAL")
+string topRow1 = statusMessage
+
+var table topCoachTable = table.new(position.top_center, 1, 2, frame_color=C_CYAN, frame_width=1, border_width=0, bgcolor=C_NAVY)
+if barstate.islast
+    table.clear(topCoachTable, 0, 0, 0, 1)
+    if showCoach
+        table.cell(topCoachTable, 0, 0, topRow0, text_color=C_CYAN, bgcolor=#073047, text_size=size.normal)
+        table.cell(topCoachTable, 0, 1, topRow1, text_color=statusTextColor, bgcolor=coachBgColor, text_size=size.normal)
+
+// 2. Right Side Swing Leg Statistical Box (Enlarged Fonts)
+var table swingStatsTable = table.new(position.top_right, 2, 7, bgcolor=C_NAVY, frame_color=C_CYAN, frame_width=1, border_color=color.new(C_CYAN, 75), border_width=1)
+if barstate.islast
+    table.clear(swingStatsTable, 0, 0, 1, 6)
+    if showSwingStats
+        table.cell(swingStatsTable, 0, 0, "SWING LEG ANALYTICS", text_color=C_WHITE, bgcolor=#073047, text_size=size.normal, text_halign=text.align_left)
+        table.cell(swingStatsTable, 1, 0, fNum(highestOffset) + "b SCAN", text_color=C_CYAN, bgcolor=#073047, text_size=size.small)
+
+        table.cell(swingStatsTable, 0, 1, "Total Leg Depth", text_color=C_SILVER, text_size=size.small)
+        table.cell(swingStatsTable, 1, 1, "-" + fNum(swingTotalDepth) + " pts", text_color=C_RED, text_size=size.small)
+
+        table.cell(swingStatsTable, 0, 2, "Max Red Bar (Leg)", text_color=C_GOLD, text_size=size.small)
+        table.cell(swingStatsTable, 1, 2, "-" + fNum(swingMaxRed) + " pts", text_color=C_GOLD, text_size=size.small)
+
+        table.cell(swingStatsTable, 0, 3, "Max Green Bar (Leg)", text_color=C_GREEN, text_size=size.small)
+        table.cell(swingStatsTable, 1, 3, "+" + fNum(swingMaxGreen) + " pts", text_color=C_GREEN, text_size=size.small)
+
+        table.cell(swingStatsTable, 0, 4, "Avg Red Bar", text_color=C_SILVER, text_size=size.small)
+        table.cell(swingStatsTable, 1, 4, "-" + fNum(swingAvgRed) + " pts", text_color=C_ORANGE, text_size=size.small)
+
+        table.cell(swingStatsTable, 0, 5, "Avg Green Bar", text_color=C_SILVER, text_size=size.small)
+        table.cell(swingStatsTable, 1, 5, "+" + fNum(swingAvgGreen) + " pts", text_color=C_GREEN, text_size=size.small)
+
+        table.cell(swingStatsTable, 0, 6, "Bear Candle Ratio", text_color=C_SILVER, text_size=size.small)
+        table.cell(swingStatsTable, 1, 6, str.tostring(swingRedCount) + "/" + str.tostring(totalSwingBars) + " (" + fNum(bearRatio) + "%)", text_color=bearRatio > 70 ? C_RED : C_GOLD, text_size=size.small)`;
+
+  // INITIALIZE LOCALSTORAGE & EDITOR
+  const textarea = document.getElementById('pineCodeTextarea');
+  const savedCode = localStorage.getItem('lmc_vre_pine_code');
+  textarea.value = savedCode || DEFAULT_PINE_CODE;
+
+  function openModal() {
+    document.getElementById('codeModal').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('codeModal').classList.remove('active');
+  }
+
+  function saveCode() {
+    localStorage.setItem('lmc_vre_pine_code', textarea.value);
+    const status = document.getElementById('save-status');
+    status.innerText = "Saved to LocalStorage!";
+    status.style.borderColor = "#00E7A4";
+    status.style.color = "#00E7A4";
+    setTimeout(() => {
+      status.innerText = "Saved in Browser";
+      status.style.borderColor = "#00D9F5";
+      status.style.color = "#00D9F5";
+    }, 2000);
+  }
+
+  function resetCode() {
+    if (confirm("Reset Pine Script code to default v1.6.1 version?")) {
+      textarea.value = DEFAULT_PINE_CODE;
+      localStorage.removeItem('lmc_vre_pine_code');
+      alert("Reset to default v1.6.1 successfully!");
+    }
+  }
+
+  function copyCode() {
+    textarea.select();
+    navigator.clipboard.writeText(textarea.value);
+    alert("Pine Script v1.6.1 copied to clipboard!");
+  }
+
+  // SIMULATOR INTERACTIVE CONTROLS
+  let currentTrend = 1;
+
+  function setTrend(val) {
+    currentTrend = val;
+    document.getElementById('btn-bull').classList.toggle('active', val === 1);
+    document.getElementById('btn-broken').classList.toggle('active', val === -1);
+    
+    if (val === -1) {
+      document.getElementById('sim-coach-status').style.background = "#4A000B";
+      document.getElementById('sim-coach-status').style.color = "#FF4161";
+      document.getElementById('sim-coach-status').innerText = "CRITICAL: HTF Protected Low Broken! Trading Suspended";
+    } else {
+      setSimState('red_normal');
+    }
+  }
+
+  function setSimState(type) {
+    if (currentTrend === -1) return;
+    
+    const options = document.querySelectorAll('.control-group .btn-option');
+    options.forEach(opt => opt.classList.remove('active'));
+    
+    const candle = document.getElementById('sim-candle-body');
+    const gridTag = document.getElementById('sim-grid-tag');
+    const depthTag = document.getElementById('sim-depth-tag');
+    const coachMsg = document.getElementById('sim-coach-status');
+
+    if (type === 'red_normal') {
+      candle.style.height = '60px';
+      candle.style.background = '#FF4161';
+      gridTag.innerText = 'LOT 1 BUY | 27130.25';
+      gridTag.style.borderColor = '#FFD000';
+      gridTag.style.color = '#FFD000';
+      depthTag.innerText = '-11.1 pts';
+      depthTag.style.background = '#081D2D';
+      depthTag.style.borderColor = '#FFD000';
+      depthTag.style.color = '#FFD000';
+      coachMsg.style.background = '#2B2600';
+      coachMsg.style.color = '#FFD000';
+      coachMsg.innerText = 'PULLBACK ACTIVE: Buy Lot 1 on Red Candle Low';
+    } else if (type === 'red_max') {
+      candle.style.height = '140px';
+      candle.style.background = '#FF4161';
+      gridTag.innerText = 'LOT 1 BUY | 27105.25';
+      gridTag.style.borderColor = '#FFD000';
+      gridTag.style.color = '#FFD000';
+      depthTag.innerText = '-36.1 pts ⚡ MAX';
+      depthTag.style.background = '#073047';
+      depthTag.style.borderColor = '#00D9F5';
+      depthTag.style.color = '#00D9F5';
+      coachMsg.style.background = '#003B2B';
+      coachMsg.style.color = '#00D9F5';
+      coachMsg.innerText = '⚡ MAX RED BAR REACHED (-36.1 pts) — EXHAUSTION BUY ZONE';
+    } else if (type === 'green_normal') {
+      candle.style.height = '70px';
+      candle.style.background = '#00E7A4';
+      gridTag.innerText = '1-LOT EXIT | 27155.00';
+      gridTag.style.borderColor = '#00E7A4';
+      gridTag.style.color = '#00E7A4';
+      depthTag.innerText = '+15.4 pts';
+      depthTag.style.background = '#081D2D';
+      depthTag.style.borderColor = '#00E7A4';
+      depthTag.style.color = '#00E7A4';
+      coachMsg.style.background = '#061625';
+      coachMsg.style.color = '#00E7A4';
+      coachMsg.innerText = 'BULLISH STEADY: Structure Intact';
+    } else if (type === 'green_max') {
+      candle.style.height = '150px';
+      candle.style.background = '#00E7A4';
+      gridTag.innerText = 'QUICK EXIT | 27185.00';
+      gridTag.style.borderColor = '#00D9F5';
+      gridTag.style.color = '#00D9F5';
+      depthTag.innerText = '+36.1 pts 🎯 TP';
+      depthTag.style.background = '#073047';
+      depthTag.style.borderColor = '#00D9F5';
+      depthTag.style.color = '#00D9F5';
+      coachMsg.style.background = '#073047';
+      coachMsg.style.color = '#00D9F5';
+      coachMsg.innerText = '🎯 MAX GREEN BAR REACHED (+36.1 pts) — TAKE PROFIT / EXIT ZONE';
+    }
+  }
+</script>
+
+</body>
+</html>
